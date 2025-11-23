@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
+
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CreatorLink</title>
   <meta name="description" content="The premium platform connecting Roblox developers with verified YouTubers and creators."/>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
-  <script type="text/javascript">
-  Paddle.Initialize({
-    token: 'live_d9b7387e8fa6a1082464f7f6c25' // replace with a client-side token
-  });
-</script>
+    <script src="config.js"></script>
+<script src="main.js"></script>
+  <!-- Removed Paddle script as USD payments are now manual via Discord -->
   <style>
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -43,6 +42,14 @@
     h3 { font-size: 2rem; }
     p { font-size: 1.125rem; }
     .max-w-7xl { max-width: 90rem; } /* Wider container */
+    /* Additional professional styles */
+    body { font-family: 'Inter', sans-serif; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+    @media (max-width: 768px) {
+      h1 { font-size: 2.5rem; }
+      h2 { font-size: 2rem; }
+      .grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-500 antialiased">
@@ -131,7 +138,7 @@
                 <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
               </div>
               <h3 class="text-2xl font-bold mb-4">Secure Payments</h3>
-              <p class="text-lg text-gray-600 dark:text-gray-300">Pay securely with Paddle for promotions.</p>
+              <p class="text-lg text-gray-600 dark:text-gray-300">Pay securely with Robux or USD (manual).</p>
             </div>
             <div class="glass p-8 rounded-2xl text-center hover-lift shadow-glow">
               <div class="w-16 h-16 mx-auto mb-6 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
@@ -411,6 +418,10 @@
             <div id="admin-payouts" class="space-y-6"></div>
           </div>
           <div class="glass p-12 rounded-2xl shadow-glow">
+            <h3 class="text-3xl font-bold mb-6 gradient-text">Transactions Log</h3>
+            <div id="admin-transactions" class="space-y-6"></div>
+          </div>
+          <div class="glass p-12 rounded-2xl shadow-glow">
             <h3 class="text-3xl font-bold mb-6 gradient-text">Platform Stats</h3>
             <div id="admin-stats" class="space-y-4 text-xl"></div>
           </div>
@@ -432,7 +443,7 @@
           <div class="flex flex-col md:flex-row-reverse items-center gap-10">
             <div class="flex-1">
               <h2 class="text-3xl font-bold mb-4">2. Send Requests</h2>
-              <p class="text-xl text-gray-600 dark:text-gray-300">Submit promotion requests and pay securely with Paddle.</p>
+              <p class="text-xl text-gray-600 dark:text-gray-300">Submit promotion requests and pay with Robux or USD.</p>
             </div>
             <div class="flex-1 bg-gray-200 dark:bg-gray-800 rounded-2xl h-64"></div>
           </div>
@@ -448,14 +459,8 @@
     </div>
   </main>
   <script>
-    // CONFIG
-    const SUPABASE_URL = 'https://pchygfliuzwckeizwrit.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjaHlnZmxpdXp3Y2tlaXp3cml0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MTA3NTUsImV4cCI6MjA3OTM4Njc1NX0.8AkT2LzUWG1Q5707YokL8m4Lnu1wqGwR2cWKbPDUSe0';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const YOUTUBE_API_KEY = 'AIzaSyD30YdnGH61G6IT4lWb8d3MkyEDbCgRRwo'; // Replace with your YouTube Data API key
-    // Paddle Setup (replace with your vendor ID)
-    Paddle.Setup({ vendor: 266973 }); // Replace 12345 with your Paddle vendor ID
-    // STATE
+    
+    
     let currentUser = null;
     let currentPage = 'home';
     let selectedCreator = null;
@@ -622,7 +627,7 @@
         data.earnings = 0;
         // Fetch channel info from YouTube
         const channelHandle = data.channel_url.split('/@')[1] || data.channel_url.split('/channel/')[1] || '';
-        if (channelHandle) {
+        if (channelHandle && YOUTUBE_API_KEY) {
           const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle=${channelHandle}&key=${YOUTUBE_API_KEY}`);
           const ytData = await response.json();
           if (ytData.items && ytData.items[0]) {
@@ -636,7 +641,8 @@
         closeOnboardingModal('creator');
         route('dashboard');
       } catch (error) {
-        showError(error.message);
+        console.error(error);
+        showError('Failed to submit application. Please check console for details.');
       }
     });
     document.getElementById('developer-onboarding-form')?.addEventListener('submit', async (e) => {
@@ -898,6 +904,8 @@
           realtimeSubscriptions.push(requestsSub);
         }
         if (isDeveloper) {
+          const { data: developer } = await supabase.from('developers').select('roblox_username').eq('user_id', currentUser.id).maybeSingle();
+          const robloxUsername = developer?.roblox_username;
           const { data: requests } = await supabase
             .from('requests')
             .select('*, creator:profiles!creator_id (full_name)')
@@ -913,7 +921,17 @@
                       <p class="text-xl font-medium">To: ${r.creator?.full_name || 'Unknown Creator'}</p>
                       <p class="text-base">Status: ${r.status}</p>
                       <p class="text-base">Price: $${r.price}</p>
-                      ${r.status === 'completed' ? `<button onclick="payRequest('${r.id}', ${r.price})" class="mt-4 px-6 py-2 btn-primary">Pay Now</button>` : ''}
+                      ${r.status === 'completed' ? `
+                        <select id="pay-type-${r.id}" class="px-5 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-2 focus:ring-indigo-500 mt-4">
+                          <option value="USD">USD (Manual)</option>
+                          <option value="Robux">Robux</option>
+                        </select>
+                        <button onclick="initiatePayment('${r.id}', ${r.price}, document.getElementById('pay-type-${r.id}').value, '${robloxUsername}')" class="mt-4 px-6 py-2 btn-primary ml-4">Initiate Payment</button>
+                        ${r.game_pass_id ? `
+                          <a href="https://www.roblox.com/game-pass/${r.game_pass_id}" target="_blank" class="mt-4 px-6 py-2 btn-secondary ml-4">Buy Game Pass</a>
+                          <button onclick="verifyRobuxPurchase('${r.id}', '${robloxUsername}', ${r.game_pass_id})" class="mt-4 px-6 py-2 btn-primary ml-4">Verify Purchase</button>
+                        ` : ''}
+                      ` : ''}
                       ${['accepted', 'completed'].includes(r.status) ? `<button onclick="cancelRequest('${r.id}')" class="mt-4 px-6 py-2 btn-secondary ml-4">Cancel</button>` : ''}
                     </div>
                   `).join('') || '<p class="text-xl text-gray-500 dark:text-gray-400">No requests yet.</p>'}
@@ -967,7 +985,6 @@
       try {
         const { data: devProfile } = await supabase.from('profiles').select('full_name').eq('id', developerId).single();
         const devName = devProfile?.full_name || 'Developer';
-
         await supabase.from('requests').update({ status: 'accepted' }).eq('id', id);
         await supabase.from('messages').insert({
           sender_id: currentUser.id,
@@ -979,7 +996,6 @@
           title: 'Request Accepted',
           message: 'Your promotion request has been accepted by the creator.'
         });
-
         loadDashboard();
         showError('Request accepted! Opening chat...');
         route('messages');
@@ -1054,37 +1070,99 @@
         showError(error.message);
       }
     };
-    window.payRequest = async (id, price) => {
+    window.initiatePayment = async (id, price, type, robloxUsername) => {
       try {
-        Paddle.Checkout.open({
-          items: [{
-            priceId: 'pro_01kapataxntj7jd742w3srq0g8', // Replace with your Paddle price ID
-            quantity: 1
-          }],
-          customer: {
-            email: currentUser.email
-          },
-          successCallback: async (data) => {
-            const { data: request } = await supabase.from('requests').select('creator_id').eq('id', id).single();
-            await supabase.from('requests').update({ status: 'paid' }).eq('id', id);
-            // Update creator earnings
-            const { data: creator } = await supabase.from('creators').select('earnings').eq('user_id', request.creator_id).single();
-            const newEarnings = (creator.earnings || 0) + (price * 0.85);
-            await supabase.from('creators').update({ earnings: newEarnings }).eq('user_id', request.creator_id);
-            // Notify creator
-            await supabase.from('notifications').insert({
-              user_id: request.creator_id,
-              title: 'Payment Received',
-              message: `You have received payment of $${price} for the promotion. Earnings updated.`
-            });
-            showError('Payment successful!');
+        if (type === 'USD') {
+          // Manual USD via Discord
+          showError('Please create a ticket in our Discord server for manual USD payment.');
+          window.open(DISCORD_SERVER_LINK, '_blank');
+          // Optionally mark as pending manual
+          await supabase.from('requests').update({ status: 'pending_manual_usd' }).eq('id', id);
+        } else if (type === 'Robux') {
+          // Create game pass for Robux payment
+          const robuxPrice = Math.ceil(price * ROBUX_RATE);
+          const gamePassId = await createGamePass(robuxPrice);
+          if (gamePassId) {
+            await supabase.from('requests').update({ game_pass_id: gamePassId, status: 'pending_robux' }).eq('id', id);
+            showError(`Game pass created! Buy it here: https://www.roblox.com/game-pass/${gamePassId}. Then click Verify Purchase.`);
             loadDashboard();
           }
-        });
+        }
       } catch (error) {
-        showError(error.message);
+        showError('Failed to initiate payment: ' + error.message);
       }
     };
+    window.verifyRobuxPurchase = async (id, robloxUsername, gamePassId) => {
+      try {
+        const userId = await getRobloxUserId(robloxUsername);
+        if (!userId) return showError('Could not find Roblox user ID.');
+        const owns = await checkOwnsGamePass(userId, gamePassId);
+        if (owns) {
+          const { data: request } = await supabase.from('requests').select('creator_id, price').eq('id', id).single();
+          await supabase.from('requests').update({ status: 'paid' }).eq('id', id);
+          // Update creator earnings (85% cut)
+          const { data: creator } = await supabase.from('creators').select('earnings').eq('user_id', request.creator_id).single();
+          const newEarnings = (creator.earnings || 0) + (request.price * 0.85);
+          await supabase.from('creators').update({ earnings: newEarnings }).eq('user_id', request.creator_id);
+          // Log transaction
+          await supabase.from('transactions').insert({
+            request_id: id,
+            amount: request.price,
+            type: 'Robux',
+            status: 'paid',
+            user_id: currentUser.id
+          });
+          // Notify creator
+          await supabase.from('notifications').insert({
+            user_id: request.creator_id,
+            title: 'Payment Received',
+            message: `You have received payment of $${request.price} (Robux) for the promotion. Earnings updated.`
+          });
+          showError('Purchase verified! Payment successful.');
+          loadDashboard();
+        } else {
+          showError('You do not own the game pass yet. Please purchase it first.');
+        }
+      } catch (error) {
+        showError('Failed to verify purchase: ' + error.message);
+      }
+    };
+    async function createGamePass(price) {
+      const formData = new FormData();
+      formData.append('name', 'Promotion Payment');
+      formData.append('description', 'Payment for promotion on CreatorLink');
+      formData.append('price', price.toString());
+      formData.append('isForSale', 'true');
+      // Note: If 415 error, may need to add image file - formData.append('iconImageAsset', file);
+      const url = `https://apis.roblox.com/game-passes/v1/universes/${UNIVERSE_ID}/game-passes`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'x-api-key': ROBLOX_API_KEY
+        },
+        body: formData
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to create game pass: ${response.status} - ${text}`);
+      }
+      const data = await response.json();
+      return data.gamePassId;
+    }
+    async function getRobloxUserId(username) {
+      const res = await fetch('https://users.roblox.com/v1/usernames/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernames: [username], excludeBannedUsers: true })
+      });
+      const data = await res.json();
+      return data.data[0]?.id;
+    }
+    async function checkOwnsGamePass(userId, gamePassId) {
+      const res = await fetch(`https://inventory.roblox.com/v1/users/${userId}/items/GamePass/${gamePassId}`);
+      const data = await res.json();
+      return data.data.length > 0;
+    }
     window.cashOut = async (creatorId) => {
       try {
         const { data: creator } = await supabase.from('creators').select('earnings').eq('id', creatorId).single();
@@ -1172,7 +1250,19 @@
             }
           } else {
             if (request.status === 'completed') {
-              menu.innerHTML += `<button onclick="payRequest('${request.id}', ${request.price})" class="px-4 py-2 btn-primary">Pay Now</button>`;
+              menu.innerHTML += `
+                <select id="pay-type-chat" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+                  <option value="USD">USD (Manual)</option>
+                  <option value="Robux">Robux</option>
+                </select>
+                <button onclick="initiatePayment('${request.id}', ${request.price}, document.getElementById('pay-type-chat').value, '${await getDeveloperRobloxUsername()}')" class="px-4 py-2 btn-primary ml-2">Initiate Payment</button>
+              `;
+              if (request.game_pass_id) {
+                menu.innerHTML += `
+                  <a href="https://www.roblox.com/game-pass/${request.game_pass_id}" target="_blank" class="px-4 py-2 btn-secondary ml-2">Buy Game Pass</a>
+                  <button onclick="verifyRobuxPurchase('${request.id}', '${await getDeveloperRobloxUsername()}', ${request.game_pass_id})" class="px-4 py-2 btn-primary ml-2">Verify Purchase</button>
+                `;
+              }
             }
           }
           if (request.status !== 'paid') {
@@ -1198,6 +1288,10 @@
       } catch (error) {
         showError('Failed to load chat.');
       }
+    }
+    async function getDeveloperRobloxUsername() {
+      const { data: developer } = await supabase.from('developers').select('roblox_username').eq('user_id', currentUser.id).single();
+      return developer.roblox_username;
     }
     async function isCreator() {
       const { data: profile } = await supabase.from('profiles').select('is_creator').eq('id', currentUser.id).single();
@@ -1287,6 +1381,17 @@
         `).join('') || '<p class="text-xl text-gray-500 dark:text-gray-400">No pending applications.</p>';
         // Payouts stub
         document.getElementById('admin-payouts').innerHTML = '<p class="text-xl text-gray-500 dark:text-gray-400">No payout requests.</p>';
+        // Transactions log
+        const { data: transactions } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+        document.getElementById('admin-transactions').innerHTML = transactions.map(t => `
+          <div class="p-4 bg-white/50 dark:bg-black/50 rounded-xl">
+            <p>Request ID: ${t.request_id}</p>
+            <p>Amount: $${t.amount}</p>
+            <p>Type: ${t.type}</p>
+            <p>Status: ${t.status}</p>
+            <p>Date: ${new Date(t.created_at).toLocaleString()}</p>
+          </div>
+        `).join('') || '<p class="text-xl text-gray-500 dark:text-gray-400">No transactions.</p>';
         // Stats
         const { count: userCount } = await supabase.from('profiles').select('id', { count: 'exact' });
         const { count: creatorCount } = await supabase.from('creators').select('id', { count: 'exact' });

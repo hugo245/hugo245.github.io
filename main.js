@@ -1,0 +1,10 @@
+const SUPABASE_URL = window.ENV.SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const YOUTUBE_API_KEY = window.ENV.YOUTUBE_API_KEY;
+const ROBLOX_API_KEY = window.ENV.ROBLOX_API_KEY;
+const UNIVERSE_ID = window.ENV.UNIVERSE_ID;
+const DISCORD_SERVER_LINK = window.ENV.DISCORD_SERVER_LINK;
+const ROBUX_RATE = window.ENV.ROBUX_RATE;
