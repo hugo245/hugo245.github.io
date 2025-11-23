@@ -4,6 +4,7 @@
 .env.production
 config.js
 secrets.js
+main.js
 
 # API Keys and Tokens
 **/api-keys.json
